@@ -1,0 +1,1835 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DCI — Wellbeing Intelligence Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=DM+Mono:wght@300;400;500&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   TOKENS
+   ============================================================ */
+:root {
+  /* Brand */
+  --teal-deep:    #0a3535;
+  --teal-mid:     #0f4a4a;
+  --teal-bright:  #2a9d8f;
+  --turquoise:    #48cae4;
+  --beige:        #e8dcc8;
+  --beige-soft:   #f0e6d3;
+  --beige-dim:    #b8a98a;
+  --burgundy:     #7d2d3f;
+  --burgundy-dim: rgba(125,45,63,0.15);
+  --burgundy-glow:rgba(125,45,63,0.35);
+  --sand:         #c4a882;
+
+  /* Mood palette */
+  --m-happy:    #f7d94c;
+  --m-positive: #5ecb6b;
+  --m-neutral:  #7ec8e3;
+  --m-sick:     #9b7f5c;
+  --m-angry:    #c94040;
+  --m-stressed: #e8852a;
+  --m-sad:      #d975a8;
+  --m-depressed:#3a3a55;
+  --m-depressed-v:#6a6a90;
+
+  /* Accent gradient */
+  --grad: linear-gradient(135deg, var(--teal-bright), var(--turquoise));
+  --grad-text: linear-gradient(135deg, #2a9d8f, #48cae4);
+
+  /* Radius */
+  --r: 12px;
+  --r-lg: 18px;
+  --r-xl: 24px;
+}
+
+/* DARK THEME */
+[data-theme="dark"] {
+  --bg:       #061e1e;
+  --bg2:      #0a2e2e;
+  --bg3:      #0f3838;
+  --bg4:      #133f3f;
+  --surface:  #0d3535;
+  --border:   rgba(232,220,200,0.07);
+  --border-v: rgba(232,220,200,0.14);
+  --text:     #e8dcc8;
+  --text-mid: #8aada8;
+  --text-dim: #4a7070;
+  --shadow:   rgba(0,0,0,0.5);
+}
+
+/* LIGHT THEME */
+[data-theme="light"] {
+  --bg:       #f5ede0;
+  --bg2:      #fdf7ef;
+  --bg3:      #f0e6d3;
+  --bg4:      #e8dcc8;
+  --surface:  #fdf7ef;
+  --border:   rgba(10,53,53,0.1);
+  --border-v: rgba(10,53,53,0.2);
+  --text:     #0a3535;
+  --text-mid: #3a6a6a;
+  --text-dim: #8aada8;
+  --shadow:   rgba(10,53,53,0.12);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Outfit', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+  transition: background 0.4s, color 0.4s;
+}
+
+/* ============================================================
+   BEADWORK + MUDCLOTH SVG PATTERNS
+   ============================================================ */
+.bead-bg {
+  position: fixed; inset: 0;
+  pointer-events: none; z-index: 0;
+  overflow: hidden;
+}
+
+.bead-bg svg {
+  width: 100%; height: 100%;
+  animation: beadBreathe 6s ease-in-out infinite;
+}
+
+@keyframes beadBreathe {
+  0%,100% { opacity: 0.045; }
+  50%      { opacity: 0.085; }
+}
+
+.mudcloth-strip {
+  height: 3px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--teal-bright) 0px, var(--teal-bright) 12px,
+    transparent 12px, transparent 16px,
+    var(--turquoise) 16px, var(--turquoise) 20px,
+    transparent 20px, transparent 28px,
+    var(--teal-bright) 28px, var(--teal-bright) 32px,
+    transparent 32px, transparent 40px
+  );
+  opacity: 0.5;
+}
+
+.bead-border {
+  position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+  background: repeating-linear-gradient(
+    180deg,
+    var(--teal-bright) 0,    var(--teal-bright) 4px,
+    transparent 4px,        transparent 6px,
+    var(--turquoise) 6px,   var(--turquoise) 8px,
+    transparent 8px,        transparent 12px,
+    var(--m-happy) 12px,    var(--m-happy) 14px,
+    transparent 14px,       transparent 18px
+  );
+  opacity: 0.7;
+  border-radius: 2px 0 0 2px;
+}
+
+/* ============================================================
+   LOGIN SCREEN
+   ============================================================ */
+#loginScreen {
+  position: fixed; inset: 0; z-index: 500;
+  background: var(--teal-deep);
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column;
+  transition: opacity 0.6s, transform 0.6s;
+}
+
+#loginScreen.exit {
+  opacity: 0; transform: scale(0.97);
+  pointer-events: none;
+}
+
+.login-pattern {
+  position: absolute; inset: 0; overflow: hidden;
+}
+
+.login-pattern svg {
+  width: 100%; height: 100%;
+  animation: beadBreathe 5s ease-in-out infinite;
+}
+
+.login-box {
+  position: relative; z-index: 2;
+  width: 420px; max-width: calc(100vw - 40px);
+  background: rgba(15,72,72,0.6);
+  backdrop-filter: blur(24px);
+  border: 1px solid rgba(232,220,200,0.12);
+  border-radius: var(--r-xl);
+  padding: 44px 40px;
+  box-shadow: 0 32px 80px rgba(0,0,0,0.5);
+}
+
+.login-logo {
+  text-align: center; margin-bottom: 32px;
+}
+
+.login-logo-mark {
+  width: 56px; height: 56px;
+  background: var(--grad);
+  border-radius: 16px;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 14px;
+  box-shadow: 0 8px 24px rgba(42,157,143,0.4);
+}
+
+.login-logo-mark svg { width: 28px; height: 28px; }
+
+.login-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 28px; font-weight: 600;
+  color: var(--beige);
+  letter-spacing: 0.02em;
+}
+
+.login-sub {
+  font-size: 12px; color: #6a9898;
+  font-family: 'DM Mono', monospace;
+  letter-spacing: 0.1em; margin-top: 4px;
+}
+
+.mudcloth-strip { margin: 20px 0; }
+
+.login-field {
+  margin-bottom: 14px;
+}
+
+.login-field label {
+  display: block; font-size: 11px;
+  color: #6a9898; font-family: 'DM Mono', monospace;
+  letter-spacing: 0.08em; margin-bottom: 6px;
+  text-transform: uppercase;
+}
+
+.login-field input {
+  width: 100%; padding: 11px 16px;
+  background: rgba(6,30,30,0.6);
+  border: 1px solid rgba(232,220,200,0.12);
+  border-radius: 8px;
+  color: var(--beige); font-size: 14px;
+  font-family: 'Outfit', sans-serif;
+  outline: none; transition: border 0.2s;
+}
+
+.login-field input:focus {
+  border-color: var(--teal-bright);
+}
+
+.login-field input::placeholder { color: #3a6060; }
+
+.btn-login {
+  width: 100%; padding: 13px;
+  background: var(--grad);
+  border: none; border-radius: 10px;
+  color: #061e1e; font-size: 14px; font-weight: 700;
+  font-family: 'Outfit', sans-serif;
+  cursor: pointer; margin-top: 6px;
+  transition: all 0.2s;
+  box-shadow: 0 4px 16px rgba(42,157,143,0.3);
+  letter-spacing: 0.02em;
+}
+
+.btn-login:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(42,157,143,0.4); }
+
+.login-divider {
+  display: flex; align-items: center; gap: 12px;
+  margin: 20px 0 16px;
+}
+.login-divider::before, .login-divider::after {
+  content: ''; flex: 1; height: 1px; background: rgba(232,220,200,0.1);
+}
+.login-divider span { font-size: 10px; color: #3a6060; font-family: 'DM Mono', monospace; letter-spacing: 0.1em; }
+
+.demo-tiers {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+}
+
+.tier-btn {
+  padding: 10px 12px; border-radius: 8px;
+  background: rgba(6,30,30,0.5);
+  border: 1px solid rgba(232,220,200,0.1);
+  color: #8aada8; font-size: 11px;
+  font-family: 'DM Mono', monospace;
+  cursor: pointer; transition: all 0.2s;
+  text-align: left;
+}
+
+.tier-btn:hover {
+  border-color: var(--teal-bright);
+  color: var(--turquoise);
+  background: rgba(42,157,143,0.08);
+}
+
+.tier-btn .tier-name { font-weight: 500; display: block; margin-bottom: 2px; }
+.tier-btn .tier-role { font-size: 9px; opacity: 0.6; }
+
+/* ============================================================
+   APP SHELL
+   ============================================================ */
+#appShell { display: none; min-height: 100vh; }
+#appShell.show { display: block; }
+
+/* HEADER */
+.header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 32px; height: 60px;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 100;
+}
+
+.mudcloth-strip.header-strip {
+  position: absolute; bottom: -3px; left: 0; right: 0;
+}
+
+.logo { display: flex; align-items: center; gap: 10px; }
+
+.logo-mark {
+  width: 32px; height: 32px;
+  background: var(--grad);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.logo-mark svg { width: 16px; height: 16px; }
+
+.logo-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 20px; font-weight: 700;
+  color: var(--text);
+}
+
+.logo-divider {
+  width: 1px; height: 16px;
+  background: var(--border-v); margin: 0 2px;
+}
+
+.logo-sector {
+  font-size: 11px;
+  font-family: 'DM Mono', monospace;
+  color: var(--text-dim);
+  letter-spacing: 0.06em;
+}
+
+.header-right { display: flex; align-items: center; gap: 10px; }
+
+.user-chip {
+  display: flex; align-items: center; gap: 8px;
+  padding: 5px 12px 5px 6px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  font-size: 11px;
+  font-family: 'DM Mono', monospace;
+  color: var(--text-mid);
+}
+
+.user-dot {
+  width: 22px; height: 22px;
+  background: var(--grad);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700; color: #061e1e;
+}
+
+.live-dot {
+  width: 7px; height: 7px;
+  background: var(--m-positive);
+  border-radius: 50%;
+  animation: livePulse 2.5s infinite;
+}
+
+@keyframes livePulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(94,203,107,0.5); }
+  50%      { box-shadow: 0 0 0 5px rgba(94,203,107,0); }
+}
+
+.icon-btn {
+  width: 34px; height: 34px;
+  border-radius: 8px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 14px;
+  transition: all 0.2s; color: var(--text-mid);
+}
+
+.icon-btn:hover { border-color: var(--border-v); color: var(--text); }
+
+/* TABS */
+.tabs {
+  display: flex; gap: 0;
+  padding: 0 32px;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+}
+
+.tab {
+  padding: 14px 22px;
+  font-size: 12px; font-weight: 600;
+  color: var(--text-dim);
+  cursor: pointer; border: none;
+  border-bottom: 2px solid transparent;
+  background: none;
+  transition: all 0.2s;
+  font-family: 'Outfit', sans-serif;
+  white-space: nowrap;
+  letter-spacing: 0.03em;
+}
+
+.tab:hover { color: var(--text); }
+
+.tab.active {
+  color: var(--turquoise);
+  border-bottom-color: var(--turquoise);
+}
+
+.tab-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 17px; height: 17px;
+  background: var(--burgundy);
+  color: var(--beige-soft); font-size: 9px;
+  border-radius: 50%; margin-left: 6px;
+  font-family: 'DM Mono', monospace;
+  animation: badgePulse 2s infinite;
+}
+
+@keyframes badgePulse {
+  0%,100% { box-shadow: 0 0 0 0 var(--burgundy-glow); }
+  50%      { box-shadow: 0 0 0 4px transparent; }
+}
+
+/* MAIN */
+.main { padding: 28px 32px; position: relative; z-index: 1; }
+
+.panel { display: none; }
+.panel.active {
+  display: block;
+  animation: panelIn 0.4s ease forwards;
+}
+
+@keyframes panelIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================================
+   COMPONENTS
+   ============================================================ */
+
+/* CARDS */
+.card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 22px;
+  position: relative; overflow: hidden;
+}
+
+.card-label {
+  font-size: 10px; color: var(--text-dim);
+  font-family: 'DM Mono', monospace;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.card-value {
+  font-size: 36px; font-weight: 800;
+  letter-spacing: -1.5px; line-height: 1;
+}
+
+.card-delta {
+  font-size: 11px; font-family: 'DM Mono', monospace;
+  margin-top: 8px; display: flex; align-items: center; gap: 4px;
+}
+
+.up   { color: var(--m-positive); }
+.down { color: var(--m-angry); }
+.flat { color: var(--text-dim); }
+
+/* GRID */
+.g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+.g4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; }
+.g21 { display: grid; grid-template-columns: 1.5fr 1fr; gap: 14px; }
+
+@media(max-width:900px) {
+  .g4,.g3,.g2,.g21 { grid-template-columns: 1fr 1fr; }
+}
+@media(max-width:600px) {
+  .g4,.g3,.g2,.g21 { grid-template-columns: 1fr; }
+  .main { padding: 16px; }
+  .header,.tabs { padding-left: 16px; padding-right: 16px; }
+}
+
+/* SECTION HEADER */
+.sh {
+  display: flex; align-items: baseline;
+  justify-content: space-between;
+  margin: 26px 0 14px;
+}
+.sh-title {
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--text-mid);
+}
+.sh-action {
+  font-size: 11px; color: var(--turquoise);
+  cursor: pointer; font-family: 'DM Mono', monospace;
+}
+
+/* AI INSIGHT BOX */
+.insight {
+  background: linear-gradient(135deg,
+    rgba(42,157,143,0.06), rgba(72,202,228,0.04));
+  border: 1px solid rgba(72,202,228,0.15);
+  border-radius: var(--r-lg);
+  padding: 20px 22px;
+  margin-bottom: 18px;
+  position: relative; overflow: hidden;
+}
+
+.insight::before {
+  content: '';
+  position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+  background: var(--grad);
+}
+
+.insight-head {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+}
+
+.ai-badge {
+  padding: 3px 10px;
+  background: var(--grad);
+  color: #061e1e; border-radius: 20px;
+  font-size: 9px; font-weight: 700;
+  font-family: 'DM Mono', monospace; letter-spacing: 0.08em;
+}
+
+.insight-title { font-size: 13px; font-weight: 600; }
+
+.insight-text {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 15px; font-style: italic;
+  color: var(--text-mid); line-height: 1.65;
+}
+
+/* ALERT CARDS */
+.alert {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 14px 16px;
+  display: flex; align-items: flex-start; gap: 12px;
+  margin-bottom: 10px;
+  transition: all 0.2s; position: relative; overflow: hidden;
+}
+
+.alert:hover { border-color: var(--border-v); }
+
+.alert.crit {
+  border-left: none;
+}
+.alert.crit .bead-border { --teal-bright: var(--burgundy); --turquoise: #c05070; --m-happy: #e88090; }
+.alert.warn .bead-border { --teal-bright: var(--m-stressed); --turquoise: var(--m-happy); --m-happy: var(--m-happy); }
+.alert.info .bead-border { opacity: 0.5; }
+
+.alert-icon {
+  width: 36px; height: 36px; border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; flex-shrink: 0;
+}
+
+.alert-icon.crit { background: var(--burgundy-dim); }
+.alert-icon.warn { background: rgba(232,133,42,0.12); }
+.alert-icon.info { background: rgba(126,200,227,0.1); }
+
+.alert-body { flex: 1; min-width: 0; }
+.alert-t { font-size: 13px; font-weight: 600; margin-bottom: 3px; }
+.alert-s { font-size: 11px; color: var(--text-dim); font-family: 'DM Mono', monospace; }
+.alert-time { font-size: 10px; color: var(--text-dim); font-family: 'DM Mono', monospace; margin-top: 5px; }
+
+.alert-act {
+  align-self: center; padding: 5px 12px;
+  font-size: 10px; border-radius: 6px;
+  background: var(--bg3); color: var(--text-mid);
+  border: 1px solid var(--border);
+  cursor: pointer; font-family: 'DM Mono', monospace;
+  transition: all 0.2s; white-space: nowrap;
+}
+.alert-act:hover { color: var(--turquoise); border-color: var(--teal-bright); }
+
+/* STATUS PILLS */
+.pill {
+  padding: 3px 10px; border-radius: 20px;
+  font-size: 10px; font-weight: 600;
+  font-family: 'DM Mono', monospace; letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+.pill-stable   { background: rgba(94,203,107,0.1);  color: var(--m-positive); }
+.pill-flag     { background: var(--burgundy-dim);   color: #e06080; border: 1px solid var(--burgundy-glow); animation: flagPulse 2s infinite; }
+.pill-fluct    { background: rgba(232,133,42,0.1);  color: var(--m-stressed); }
+.pill-decline  { background: rgba(201,64,64,0.1);   color: var(--m-angry); }
+
+@keyframes flagPulse {
+  0%,100% { box-shadow: 0 0 0 0 var(--burgundy-glow); }
+  50%      { box-shadow: 0 0 0 4px transparent; }
+}
+
+/* INDIVIDUAL CARDS */
+.ind-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--r-lg); padding: 18px 20px;
+  margin-bottom: 12px; transition: all 0.2s;
+  position: relative; overflow: hidden;
+}
+.ind-card:hover { border-color: var(--border-v); }
+
+.ind-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.ind-avatar {
+  width: 40px; height: 40px; border-radius: 11px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; flex-shrink: 0;
+  font-family: 'DM Mono', monospace;
+}
+
+.ind-id { font-size: 13px; font-weight: 600; }
+.ind-meta { font-size: 11px; color: var(--text-dim); font-family: 'DM Mono', monospace; margin-top: 2px; }
+
+/* MINI CALENDAR */
+.mini-cal {
+  display: grid; grid-template-columns: repeat(7,1fr); gap: 3px;
+}
+.cal-d {
+  aspect-ratio: 1; border-radius: 3px;
+  cursor: pointer; transition: transform 0.15s;
+}
+.cal-d:hover { transform: scale(1.25); z-index: 2; position: relative; }
+.cal-empty { background: transparent; }
+.cal-null {
+  background: rgba(255,255,255,0.03);
+  border: 1px dashed rgba(255,255,255,0.06);
+}
+
+/* DISTRIBUTION BARS */
+.dist-row { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; }
+.dist-label {
+  font-size: 11px; color: var(--text-mid);
+  font-family: 'DM Mono', monospace; width: 80px; flex-shrink: 0;
+  display: flex; align-items: center; gap: 5px;
+}
+.dist-track {
+  flex: 1; height: 5px; background: var(--bg3);
+  border-radius: 3px; overflow: hidden;
+}
+.dist-fill {
+  height: 100%; border-radius: 3px;
+  transition: width 1.2s cubic-bezier(0.34,1.56,0.64,1);
+}
+.dist-val {
+  font-size: 10px; color: var(--text-dim);
+  font-family: 'DM Mono', monospace; width: 28px; text-align: right; flex-shrink: 0;
+}
+
+/* METRIC CARDS */
+.metric {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 16px 18px;
+  position: relative; overflow: hidden;
+}
+.metric::after {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+}
+.metric.teal::after   { background: var(--grad); }
+.metric.green::after  { background: var(--m-positive); }
+.metric.amber::after  { background: var(--m-stressed); }
+.metric.burg::after   { background: var(--burgundy); }
+.metric.yellow::after { background: var(--m-happy); }
+
+.metric-lbl { font-size: 9px; color: var(--text-dim); font-family: 'DM Mono', monospace; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 7px; }
+.metric-val { font-size: 30px; font-weight: 800; letter-spacing: -1px; line-height: 1; }
+.metric-sub { font-size: 10px; color: var(--text-dim); font-family: 'DM Mono', monospace; margin-top: 5px; }
+
+/* SECTOR TABS */
+.stabs {
+  display: flex; gap: 6px;
+  background: var(--bg3); padding: 5px;
+  border-radius: 10px; width: fit-content;
+  margin-bottom: 20px;
+}
+.stab {
+  padding: 7px 16px; border-radius: 7px;
+  font-size: 11px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s;
+  color: var(--text-dim); background: none; border: none;
+  font-family: 'Outfit', sans-serif;
+}
+.stab.active { background: var(--bg2); color: var(--text); box-shadow: 0 2px 8px var(--shadow); }
+
+/* TIMELINE BAR */
+.tl-bar { height: 44px; border-radius: 8px; overflow: hidden; display: flex; background: var(--bg3); }
+.tl-seg { height: 100%; cursor: pointer; transition: opacity 0.2s; }
+.tl-seg:hover { opacity: 0.8; }
+
+/* HEATMAP */
+.heatmap { display: grid; grid-template-columns: repeat(10,1fr); gap: 5px; }
+.hm-cell {
+  aspect-ratio: 1; border-radius: 5px;
+  cursor: pointer; transition: transform 0.2s;
+  position: relative;
+}
+.hm-cell:hover { transform: scale(1.2); z-index: 5; }
+.hm-cell::after {
+  content: attr(data-tip);
+  position: absolute; bottom: calc(100% + 7px); left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg4); border: 1px solid var(--border-v);
+  padding: 4px 8px; border-radius: 5px;
+  font-size: 10px; font-family: 'DM Mono', monospace;
+  white-space: nowrap; opacity: 0; pointer-events: none;
+  transition: opacity 0.15s; z-index: 10;
+}
+.hm-cell:hover::after { opacity: 1; }
+
+/* TREND SVG */
+.trend-svg { width: 100%; height: 110px; }
+
+/* DONUT */
+.donut-wrap { position: relative; width: 130px; height: 130px; flex-shrink: 0; }
+.donut-svg { transform: rotate(-90deg); }
+.donut-center {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; text-align: center;
+}
+.donut-num { font-size: 24px; font-weight: 800; letter-spacing: -1px; }
+.donut-lbl { font-size: 9px; color: var(--text-dim); font-family: 'DM Mono', monospace; margin-top: 2px; }
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-v); border-radius: 2px; }
+
+/* COUNT-UP */
+.count-up { display: inline-block; }
+
+/* PROCESSING */
+.proc-overlay {
+  position: fixed; inset: 0; z-index: 300;
+  background: rgba(6,30,30,0.92);
+  backdrop-filter: blur(12px);
+  display: none; flex-direction: column;
+  align-items: center; justify-content: center; gap: 20px;
+}
+.proc-overlay.show { display: flex; }
+
+.proc-ring {
+  width: 72px; height: 72px;
+  border: 2px solid rgba(72,202,228,0.15);
+  border-top-color: var(--turquoise);
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.proc-title { font-size: 16px; font-weight: 700; color: var(--beige); }
+.proc-steps { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--text-dim); text-align: center; line-height: 2.2; }
+.proc-step { opacity: 0; transform: translateY(4px); transition: all 0.35s; }
+.proc-step.done { opacity: 0.5; transform: none; color: var(--teal-bright); }
+.proc-step.active { opacity: 1; transform: none; color: var(--beige); }
+
+/* UPLOAD */
+.upload-zone {
+  border: 1.5px dashed var(--border-v);
+  border-radius: var(--r-lg); padding: 40px;
+  text-align: center; cursor: pointer;
+  transition: all 0.3s; background: var(--bg2);
+}
+.upload-zone:hover { border-color: var(--teal-bright); background: var(--bg3); }
+
+.up-icon { font-size: 36px; margin-bottom: 12px; }
+.up-title { font-size: 15px; font-weight: 700; margin-bottom: 5px; }
+.up-sub { font-size: 12px; color: var(--text-dim); font-family: 'DM Mono', monospace; }
+
+.btn { padding: 9px 20px; border-radius: 8px; font-size: 12px; font-weight: 600; font-family: 'Outfit', sans-serif; cursor: pointer; transition: all 0.2s; border: none; letter-spacing: 0.02em; }
+.btn-primary { background: var(--grad); color: #061e1e; box-shadow: 0 3px 12px rgba(42,157,143,0.25); }
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 5px 16px rgba(42,157,143,0.35); }
+.btn-ghost { background: var(--bg3); color: var(--text); border: 1px solid var(--border-v); }
+.btn-ghost:hover { border-color: var(--teal-bright); color: var(--turquoise); }
+
+.up-actions { display: flex; gap: 10px; justify-content: center; margin-top: 20px; }
+
+.up-preview {
+  display: none; align-items: center; gap: 14px;
+  padding: 14px; background: var(--bg2);
+  border: 1px solid var(--border); border-radius: var(--r); margin-top: 10px;
+}
+.up-preview.show { display: flex; }
+
+/* CHAMPION BADGE */
+.champ-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 12px;
+  background: rgba(42,157,143,0.08);
+  border: 1px solid rgba(42,157,143,0.2);
+  border-radius: 20px; font-size: 10px;
+  font-family: 'DM Mono', monospace; color: var(--teal-bright);
+  margin-bottom: 18px;
+}
+
+/* FADE STAGGER */
+.fi { opacity: 0; transform: translateY(10px); animation: fi 0.45s forwards; }
+.fi1 { animation-delay: 0.05s; }
+.fi2 { animation-delay: 0.12s; }
+.fi3 { animation-delay: 0.19s; }
+.fi4 { animation-delay: 0.26s; }
+.fi5 { animation-delay: 0.33s; }
+@keyframes fi { to { opacity: 1; transform: none; } }
+
+/* MOOD LEGEND */
+.mood-legend { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.mood-chip { display: flex; align-items: center; gap: 5px; font-size: 10px; font-family: 'DM Mono', monospace; color: var(--text-mid); }
+.mood-dot { width: 9px; height: 9px; border-radius: 2px; flex-shrink: 0; }
+
+/* COLOUR KEY GRID */
+.ck-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; margin-top: 14px; }
+.ck-cell { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; }
+.ck-swatch { width: 26px; height: 26px; border-radius: 6px; margin-bottom: 6px; }
+.ck-name { font-size: 11px; font-weight: 600; }
+.ck-mood { font-size: 9px; color: var(--text-dim); font-family: 'DM Mono', monospace; margin-top: 2px; }
+
+/* RECENT TABLE */
+.r-row {
+  display: flex; align-items: center; padding: 12px 16px;
+  border-bottom: 1px solid var(--border); gap: 12px;
+  cursor: pointer; transition: all 0.2s;
+}
+.r-row:hover { padding-left: 20px; background: var(--bg3); border-radius: var(--r); }
+.r-row:last-child { border-bottom: none; }
+.r-av { width: 34px; height: 34px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; font-family: 'DM Mono', monospace; }
+
+/* NOTE FIELD */
+.note-field {
+  width: 100%; padding: 10px 14px;
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 8px; color: var(--text); font-size: 12px;
+  font-family: 'Outfit', sans-serif; resize: none;
+  outline: none; transition: border 0.2s; margin-top: 10px;
+}
+.note-field:focus { border-color: var(--teal-bright); }
+
+/* ============================================================
+   BEADWORK SVG PATTERN
+   ============================================================ */
+</style>
+</head>
+<body>
+
+<!-- BACKGROUND TEXTURE -->
+<div class="bead-bg" aria-hidden="true">
+<svg viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <pattern id="bead" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+      <!-- East African beadwork: concentric diamonds + dot grid -->
+      <rect x="19" y="2"  width="2" height="2" fill="#2a9d8f"/>
+      <rect x="19" y="36" width="2" height="2" fill="#2a9d8f"/>
+      <rect x="2"  y="19" width="2" height="2" fill="#2a9d8f"/>
+      <rect x="36" y="19" width="2" height="2" fill="#2a9d8f"/>
+      <rect x="12" y="12" width="2" height="2" fill="#48cae4"/>
+      <rect x="26" y="12" width="2" height="2" fill="#48cae4"/>
+      <rect x="12" y="26" width="2" height="2" fill="#48cae4"/>
+      <rect x="26" y="26" width="2" height="2" fill="#48cae4"/>
+      <rect x="19" y="9"  width="2" height="2" fill="#e8dcc8"/>
+      <rect x="19" y="29" width="2" height="2" fill="#e8dcc8"/>
+      <rect x="9"  y="19" width="2" height="2" fill="#e8dcc8"/>
+      <rect x="29" y="19" width="2" height="2" fill="#e8dcc8"/>
+      <rect x="19" y="19" width="2" height="2" fill="#2a9d8f"/>
+      <rect x="15" y="15" width="2" height="2" fill="#7d2d3f" opacity="0.6"/>
+      <rect x="23" y="15" width="2" height="2" fill="#7d2d3f" opacity="0.6"/>
+      <rect x="15" y="23" width="2" height="2" fill="#7d2d3f" opacity="0.6"/>
+      <rect x="23" y="23" width="2" height="2" fill="#7d2d3f" opacity="0.6"/>
+    </pattern>
+  </defs>
+  <rect width="100%" height="100%" fill="url(#bead)"/>
+</svg>
+</div>
+
+<!-- PROCESSING OVERLAY -->
+<div class="proc-overlay" id="procOverlay">
+  <div class="proc-ring"></div>
+  <div class="proc-title">Analysing mood data</div>
+  <div class="proc-steps">
+    <div class="proc-step" id="ps1">◈  Image received</div>
+    <div class="proc-step" id="ps2">◈  Colour mapping in progress</div>
+    <div class="proc-step" id="ps3">◈  Emotion extraction</div>
+    <div class="proc-step" id="ps4">◈  Pattern analysis</div>
+    <div class="proc-step" id="ps5">◈  Risk scoring</div>
+    <div class="proc-step" id="ps6">◈  Dashboard populating</div>
+  </div>
+</div>
+
+<!-- ============================================================
+     LOGIN SCREEN
+     ============================================================ -->
+<div id="loginScreen">
+  <div class="login-pattern">
+    <svg viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+      <defs>
+        <pattern id="loginBead" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+          <rect x="19" y="2"  width="2" height="2" fill="#2a9d8f"/>
+          <rect x="19" y="36" width="2" height="2" fill="#2a9d8f"/>
+          <rect x="2"  y="19" width="2" height="2" fill="#2a9d8f"/>
+          <rect x="36" y="19" width="2" height="2" fill="#2a9d8f"/>
+          <rect x="12" y="12" width="2" height="2" fill="#48cae4"/>
+          <rect x="26" y="12" width="2" height="2" fill="#48cae4"/>
+          <rect x="12" y="26" width="2" height="2" fill="#48cae4"/>
+          <rect x="26" y="26" width="2" height="2" fill="#48cae4"/>
+          <rect x="19" y="9"  width="2" height="2" fill="#e8dcc8"/>
+          <rect x="19" y="29" width="2" height="2" fill="#e8dcc8"/>
+          <rect x="9"  y="19" width="2" height="2" fill="#e8dcc8"/>
+          <rect x="29" y="19" width="2" height="2" fill="#e8dcc8"/>
+          <rect x="19" y="19" width="2" height="2" fill="#2a9d8f"/>
+          <rect x="15" y="15" width="2" height="2" fill="#7d2d3f" opacity="0.8"/>
+          <rect x="23" y="15" width="2" height="2" fill="#7d2d3f" opacity="0.8"/>
+          <rect x="15" y="23" width="2" height="2" fill="#7d2d3f" opacity="0.8"/>
+          <rect x="23" y="23" width="2" height="2" fill="#7d2d3f" opacity="0.8"/>
+        </pattern>
+        <!-- Mudcloth horizontal bands -->
+        <pattern id="mudcloth" x="0" y="0" width="80" height="20" patternUnits="userSpaceOnUse">
+          <rect width="80" height="20" fill="none"/>
+          <rect x="0" y="9" width="12" height="2" fill="#2a9d8f" opacity="0.6"/>
+          <rect x="16" y="9" width="4" height="2" fill="#48cae4" opacity="0.4"/>
+          <rect x="24" y="9" width="8" height="2" fill="#2a9d8f" opacity="0.6"/>
+          <rect x="36" y="9" width="2" height="2" fill="#e8dcc8" opacity="0.3"/>
+          <rect x="42" y="9" width="12" height="2" fill="#2a9d8f" opacity="0.6"/>
+          <rect x="58" y="9" width="4" height="2" fill="#48cae4" opacity="0.4"/>
+          <rect x="66" y="9" width="8" height="2" fill="#2a9d8f" opacity="0.6"/>
+        </pattern>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#loginBead)" opacity="0.12"/>
+      <rect width="100%" height="100%" fill="url(#mudcloth)" opacity="0.3"/>
+    </svg>
+  </div>
+
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="login-logo-mark">
+        <svg viewBox="0 0 28 28" fill="none">
+          <circle cx="14" cy="14" r="10" stroke="#061e1e" stroke-width="3"/>
+          <circle cx="14" cy="14" r="4" fill="#061e1e"/>
+          <circle cx="14" cy="6"  r="2" fill="#061e1e"/>
+          <circle cx="14" cy="22" r="2" fill="#061e1e"/>
+          <circle cx="6"  cy="14" r="2" fill="#061e1e"/>
+          <circle cx="22" cy="14" r="2" fill="#061e1e"/>
+        </svg>
+      </div>
+      <div class="login-title">DCI Platform</div>
+      <div class="login-sub">Wellbeing Intelligence · Secure Access</div>
+    </div>
+
+    <div class="mudcloth-strip"></div>
+
+    <div class="login-field">
+      <label>Email address</label>
+      <input type="email" placeholder="yourname@institution.org" id="loginEmail">
+    </div>
+    <div class="login-field">
+      <label>Password</label>
+      <input type="password" placeholder="••••••••" id="loginPass">
+    </div>
+    <button class="btn-login" onclick="doLogin()">Sign In →</button>
+
+    <div class="login-divider"><span>or enter as</span></div>
+
+    <div class="demo-tiers">
+      <button class="tier-btn" onclick="loginAs('champion')">
+        <span class="tier-name">Community Champion</span>
+        <span class="tier-role">Individual view · cohort assigned</span>
+      </button>
+      <button class="tier-btn" onclick="loginAs('institution')">
+        <span class="tier-name">Institution Lead</span>
+        <span class="tier-role">Head Teacher · HR Manager</span>
+      </button>
+      <button class="tier-btn" onclick="loginAs('district')">
+        <span class="tier-name">District Officer</span>
+        <span class="tier-role">Regional oversight</span>
+      </button>
+      <button class="tier-btn" onclick="loginAs('executive')">
+        <span class="tier-name">Executive / Funder</span>
+        <span class="tier-role">National · Policy · CEO</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     APP SHELL
+     ============================================================ -->
+<div id="appShell">
+  <header class="header" style="position:relative;">
+    <div class="logo">
+      <div class="logo-mark">
+        <svg viewBox="0 0 28 28" fill="none">
+          <circle cx="14" cy="14" r="9" stroke="#061e1e" stroke-width="2.5"/>
+          <circle cx="14" cy="14" r="3.5" fill="#061e1e"/>
+          <circle cx="14" cy="7"  r="1.5" fill="#061e1e"/>
+          <circle cx="14" cy="21" r="1.5" fill="#061e1e"/>
+          <circle cx="7"  cy="14" r="1.5" fill="#061e1e"/>
+          <circle cx="21" cy="14" r="1.5" fill="#061e1e"/>
+        </svg>
+      </div>
+      <span class="logo-name">DCI</span>
+      <div class="logo-divider"></div>
+      <span class="logo-sector" id="headerSector">Platform</span>
+    </div>
+    <div class="header-right">
+      <div class="live-dot"></div>
+      <span style="font-size:11px;color:var(--text-dim);font-family:'DM Mono',monospace;" id="headerTerm">Term 2 · 2025</span>
+      <div class="icon-btn" onclick="toggleTheme()" title="Toggle theme">◑</div>
+      <div class="user-chip">
+        <div class="user-dot" id="userDot">C</div>
+        <span id="userName">Champion</span>
+      </div>
+      <div class="icon-btn" onclick="logout()" title="Sign out" style="font-size:12px;">⏻</div>
+    </div>
+    <div class="mudcloth-strip header-strip"></div>
+  </header>
+
+  <nav class="tabs" id="tabBar"></nav>
+
+  <main class="main">
+
+    <!-- ========== CHAMPION: UPLOAD ========== -->
+    <div class="panel" id="panel-upload">
+      <div style="max-width:660px;margin:0 auto;">
+        <div class="champ-badge">◉ Community Champion — Scan Interface</div>
+        <h1 style="font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:600;letter-spacing:-0.5px;margin-bottom:6px;">Upload a tracker page</h1>
+        <p style="font-size:13px;color:var(--text-dim);line-height:1.65;margin-bottom:24px;">Photograph or scan a completed booklet page. The AI layer reads the colour pattern and surfaces emotional intelligence for guided conversation.</p>
+
+        <div class="upload-zone" onclick="document.getElementById('fileIn').click()" ondragover="ev(event)" ondrop="drop(event)">
+          <div class="up-icon">📋</div>
+          <div class="up-title">Drop the scanned page here</div>
+          <div class="up-sub">JPG · PNG · PDF — physical booklet photograph</div>
+          <div class="up-actions" onclick="event.stopPropagation()">
+            <button class="btn btn-primary" onclick="document.getElementById('fileIn').click()">Choose file</button>
+            <button class="btn btn-ghost" onclick="simScan()">Simulate scan</button>
+          </div>
+        </div>
+        <input type="file" id="fileIn" accept="image/*,.pdf" onchange="fileChosen(event)" style="display:none">
+
+        <div class="up-preview" id="upPreview">
+          <div style="font-size:30px;">📄</div>
+          <div style="flex:1;">
+            <div style="font-size:13px;font-weight:600;" id="prevName">scan_march_2025.jpg</div>
+            <div style="font-size:11px;color:var(--text-dim);font-family:'DM Mono',monospace;margin-top:3px;">Ready to process · March 2025</div>
+          </div>
+          <button class="btn btn-primary" onclick="runProc()">Analyse →</button>
+        </div>
+
+        <!-- Colour key -->
+        <div class="sh" style="margin-top:28px;"><div class="sh-title">Colour Key — Emotion Map</div></div>
+        <div class="ck-grid">
+          <div class="ck-cell"><div class="ck-swatch" style="background:#f7d94c;"></div><div class="ck-name">Yellow</div><div class="ck-mood">Happy</div></div>
+          <div class="ck-cell"><div class="ck-swatch" style="background:#5ecb6b;"></div><div class="ck-name">Green</div><div class="ck-mood">Positive</div></div>
+          <div class="ck-cell"><div class="ck-swatch" style="background:#7ec8e3;"></div><div class="ck-name">Light Blue</div><div class="ck-mood">Neutral</div></div>
+          <div class="ck-cell"><div class="ck-swatch" style="background:#9b7f5c;"></div><div class="ck-name">Brown</div><div class="ck-mood">Sick</div></div>
+          <div class="ck-cell"><div class="ck-swatch" style="background:#c94040;"></div><div class="ck-name">Red</div><div class="ck-mood">Angry</div></div>
+          <div class="ck-cell"><div class="ck-swatch" style="background:#e8852a;"></div><div class="ck-name">Orange</div><div class="ck-mood">Stressed</div></div>
+          <div class="ck-cell"><div class="ck-swatch" style="background:#d975a8;"></div><div class="ck-name">Pink</div><div class="ck-mood">Sad</div></div>
+          <div class="ck-cell"><div class="ck-swatch" style="background:#6a6a90;border:1px solid rgba(255,255,255,0.1);"></div><div class="ck-name">Black</div><div class="ck-mood">Depressed</div></div>
+        </div>
+
+        <!-- Recent scans -->
+        <div class="sh"><div class="sh-title">Recent Scans</div><div class="sh-action">View all →</div></div>
+        <div class="card" style="padding:0;overflow:hidden;">
+          <div class="r-row"><div class="r-av" style="background:rgba(94,203,107,0.12);color:var(--m-positive);">#047</div><div style="flex:1;"><div style="font-size:13px;font-weight:600;">Individual #047 · S4 · Female</div><div style="font-size:10px;color:var(--text-dim);font-family:'DM Mono',monospace;margin-top:2px;">28 days logged · Processed 2h ago</div></div><span class="pill pill-stable">Stable</span></div>
+          <div class="r-row"><div class="r-av" style="background:var(--burgundy-dim);color:#e06080;">#031</div><div style="flex:1;"><div style="font-size:13px;font-weight:600;">Individual #031 · S3 · Male</div><div style="font-size:10px;color:var(--text-dim);font-family:'DM Mono',monospace;margin-top:2px;">22 days logged · Processed 5h ago</div></div><span class="pill pill-flag">⚑ Flagged</span></div>
+          <div class="r-row"><div class="r-av" style="background:rgba(232,133,42,0.12);color:var(--m-stressed);">#058</div><div style="flex:1;"><div style="font-size:13px;font-weight:600;">Individual #058 · S4 · Female</div><div style="font-size:10px;color:var(--text-dim);font-family:'DM Mono',monospace;margin-top:2px;">18 days logged · Processed yesterday</div></div><span class="pill pill-fluct">Fluctuating</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== CHAMPION: INDIVIDUAL VIEW ========== -->
+    <div class="panel" id="panel-individual">
+
+      <div class="insight fi fi1">
+        <div class="bead-border"></div>
+        <div class="insight-head">
+          <span class="ai-badge">AI INSIGHT</span>
+          <span class="insight-title">Champion View — March 2025</span>
+        </div>
+        <div class="insight-text">"Individual #031 has logged 6 consecutive days of stressed and angry, with two depressed entries in the final week. This is a pattern that warrants a sit-down conversation before the end of this week — not an escalation, but a genuine check-in. Their February was similar but self-corrected. Ask about what changed. Individual #058's silence over 7 days is itself worth noting — absence from logging often precedes a difficult disclosure."</div>
+      </div>
+
+      <!-- Flagged -->
+      <div class="sh"><div class="sh-title">⚑ Flagged for Conversation</div><div class="sh-action">Clear all</div></div>
+
+      <div class="alert crit fi fi2" style="position:relative;overflow:hidden;">
+        <div class="bead-border" style="--teal-bright:#7d2d3f;--turquoise:#c05070;--m-happy:#e88090;"></div>
+        <div class="alert-icon crit">🔴</div>
+        <div class="alert-body">
+          <div class="alert-t">Individual #031 — 6 consecutive distress days</div>
+          <div class="alert-s">Stressed · Angry · Depressed pattern · Week 3 of March</div>
+          <div class="alert-time">Flagged today · Last logged: yesterday</div>
+        </div>
+        <button class="alert-act">Open →</button>
+      </div>
+
+      <div class="alert warn fi fi3" style="position:relative;overflow:hidden;">
+        <div class="bead-border" style="--teal-bright:#e8852a;--turquoise:#d975a8;--m-happy:#f7d94c;"></div>
+        <div class="alert-icon warn">🟠</div>
+        <div class="alert-body">
+          <div class="alert-t">Individual #058 — 7 days without logging</div>
+          <div class="alert-s">Last entry was Stressed · Silence is a signal</div>
+          <div class="alert-time">Soft flag · Approach gently this week</div>
+        </div>
+        <button class="alert-act">Open →</button>
+      </div>
+
+      <div class="alert info fi fi4" style="position:relative;overflow:hidden;">
+        <div class="bead-border"></div>
+        <div class="alert-icon info">🔵</div>
+        <div class="alert-body">
+          <div class="alert-t">Individual #072 — shift from stable to fluctuating</div>
+          <div class="alert-s">3-week stable run broken · Now alternating Sad / Neutral</div>
+          <div class="alert-time">Monitor · No action yet required</div>
+        </div>
+        <button class="alert-act">Open →</button>
+      </div>
+
+      <!-- Individual detail: #031 -->
+      <div class="sh"><div class="sh-title">Pattern Detail — Individual #031</div><div class="sh-action">Download PDF</div></div>
+
+      <div class="card fi fi3">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+          <div>
+            <div style="font-size:15px;font-weight:700;">March 2025 · S3 · Male</div>
+            <div style="font-size:11px;color:var(--text-dim);font-family:'DM Mono',monospace;margin-top:2px;">22 of 31 days logged</div>
+          </div>
+          <span class="pill pill-flag">⚑ Flagged</span>
+        </div>
+        <div class="mini-cal" id="cal031"></div>
+        <div class="mood-legend" id="moodLeg031" style="margin-top:14px;"></div>
+        <div style="margin-top:18px;padding-top:16px;border-top:1px solid var(--border);">
+          <div class="card-label">Mood distribution — March</div>
+          <div id="dist031" style="margin-top:10px;"></div>
+        </div>
+        <textarea class="note-field" placeholder="Champion note: Log that a conversation has taken place, or note what you observed. No personal details — just pattern response." rows="3"></textarea>
+        <div style="display:flex;gap:8px;margin-top:10px;">
+          <button class="btn btn-ghost" style="flex:1;font-size:11px;">Mark: Conversation held</button>
+          <button class="btn btn-primary" style="flex:1;font-size:11px;">Escalate to institution →</button>
+        </div>
+      </div>
+
+      <!-- All individuals table -->
+      <div class="sh"><div class="sh-title">All Individuals — My Cohort (March)</div><div class="sh-action">Export</div></div>
+      <div class="card fi fi4" id="indTable" style="padding:0;overflow:hidden;"></div>
+    </div>
+
+    <!-- ========== INSTITUTION VIEW ========== -->
+    <div class="panel" id="panel-institution">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;">
+        <div>
+          <h2 style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:600;letter-spacing:-0.3px;" id="instTitle">Institution Overview</h2>
+          <p style="font-size:11px;color:var(--text-dim);font-family:'DM Mono',monospace;margin-top:3px;" id="instSub">Head Teacher · March 2025</p>
+        </div>
+        <div class="stabs" id="sectorTabs">
+          <button class="stab active" onclick="setSector(this,'student')">Student</button>
+          <button class="stab" onclick="setSector(this,'corporate')">Corporate</button>
+          <button class="stab" onclick="setSector(this,'ngo')">NGO / Rehab</button>
+        </div>
+      </div>
+
+      <!-- Insight box — changes per sector -->
+      <div class="insight fi fi1" id="instInsight">
+        <div class="bead-border"></div>
+        <div class="insight-head">
+          <span class="ai-badge">AI INSIGHT</span>
+          <span class="insight-title" id="instInsightTitle">Student Cohort — Week 3, March</span>
+        </div>
+        <div class="insight-text" id="instInsightText">"The student cohort's emotional climate has improved slightly since February, but a mid-week stress spike — concentrated on Tuesdays and Wednesdays — persists across multiple year groups. This pattern correlates with assessment scheduling. The 7% critical cohort requires champion contact this week. Staff wellbeing data mirrors the student pattern, suggesting shared institutional pressure rather than individual circumstance."</div>
+      </div>
+
+      <!-- Metrics strip -->
+      <div class="g4 fi fi2" id="instMetrics"></div>
+
+      <div class="g21" style="margin-top:14px;">
+        <!-- Trend chart -->
+        <div class="card fi fi3">
+          <div class="card-label" id="trendLabel">12-Week Wellbeing Trend — Student Cohort</div>
+          <svg class="trend-svg" viewBox="0 0 400 110" preserveAspectRatio="none" id="instTrend"></svg>
+          <div style="display:flex;justify-content:space-between;margin-top:5px;">
+            <span style="font-size:9px;color:var(--text-dim);font-family:'DM Mono',monospace;">Jan</span>
+            <span style="font-size:9px;color:var(--text-dim);font-family:'DM Mono',monospace;">Feb</span>
+            <span style="font-size:9px;color:var(--text-dim);font-family:'DM Mono',monospace;">Mar</span>
+          </div>
+        </div>
+        <!-- Donut -->
+        <div class="card fi fi4">
+          <div class="card-label" id="donutLabel">Current Month — Mood Split</div>
+          <div style="display:flex;align-items:center;gap:16px;margin-top:10px;">
+            <div class="donut-wrap">
+              <svg class="donut-svg" width="130" height="130" viewBox="0 0 130 130" id="donutSvg"></svg>
+              <div class="donut-center">
+                <div class="donut-num" id="donutNum">78%</div>
+                <div class="donut-lbl" id="donutLbl">Well or<br>Neutral</div>
+              </div>
+            </div>
+            <div style="flex:1;" id="donutLegend"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Champion activity -->
+      <div class="sh"><div class="sh-title" id="champTitle">Champion Activity</div><div class="sh-action">Schedule session</div></div>
+      <div class="card fi fi3" id="champActivity"></div>
+
+      <!-- Top trends -->
+      <div class="sh"><div class="sh-title" id="trendsTitle">Key Patterns This Month</div></div>
+      <div class="g3 fi fi4" id="instTrends"></div>
+    </div>
+
+    <!-- ========== DISTRICT VIEW ========== -->
+    <div class="panel" id="panel-district">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;">
+        <div>
+          <h2 style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:600;">District Overview</h2>
+          <p style="font-size:11px;color:var(--text-dim);font-family:'DM Mono',monospace;margin-top:3px;">Regional Officer · March 2025</p>
+        </div>
+        <button class="btn btn-ghost" style="font-size:11px;">Export District Report</button>
+      </div>
+
+      <div class="insight fi fi1">
+        <div class="bead-border"></div>
+        <div class="insight-head">
+          <span class="ai-badge">AI INSIGHT</span>
+          <span class="insight-title">District Intelligence — March 2025</span>
+        </div>
+        <div class="insight-text">"The Northern and Eastern zones carry the highest concentration of distress signals this month — a pattern that aligns with the dry season and reduced school feeding in those areas. Three institutions in the Central zone have submitted no data in over two weeks. Silence in a reporting system is never neutral — these sites require a follow-up visit. Across the district, institutions with active champion programmes show a 34% lower critical-flag rate than those without."</div>
+      </div>
+
+      <div class="g4 fi fi2">
+        <div class="metric teal"><div class="metric-lbl">Active Institutions</div><div class="metric-val count-up" data-target="47">0</div><div class="metric-sub">↑ 6 new this term</div></div>
+        <div class="metric green"><div class="metric-lbl">Individuals Tracked</div><div class="metric-val count-up" data-target="2841">0</div><div class="metric-sub">↑ 312 from last term</div></div>
+        <div class="metric burg"><div class="metric-lbl">Flagged This Week</div><div class="metric-val count-up" data-target="84" style="color:var(--burgundy);">0</div><div class="metric-sub">↑ 11 vs last week</div></div>
+        <div class="metric green"><div class="metric-lbl">Interventions Done</div><div class="metric-val count-up" data-target="631">0</div><div class="metric-sub">This month · 71% recovery</div></div>
+      </div>
+
+      <!-- Heatmap -->
+      <div class="sh" style="margin-top:20px;">
+        <div class="sh-title">Distress Heatmap — All Institutions</div>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <div class="mood-chip"><div class="mood-dot" style="background:var(--m-positive);"></div>Low</div>
+          <div class="mood-chip"><div class="mood-dot" style="background:var(--m-happy);"></div>Moderate</div>
+          <div class="mood-chip"><div class="mood-dot" style="background:var(--m-stressed);"></div>Elevated</div>
+          <div class="mood-chip"><div class="mood-dot" style="background:var(--m-angry);"></div>High</div>
+          <div class="mood-chip"><div class="mood-dot" style="background:var(--m-depressed-v);"></div>No data</div>
+        </div>
+      </div>
+      <div class="card fi fi3">
+        <div class="heatmap" id="heatmap"></div>
+        <div style="margin-top:12px;font-size:10px;color:var(--text-dim);font-family:'DM Mono',monospace;">47 active · 3 unresponsive · Each cell = one institution</div>
+      </div>
+
+      <!-- District breakdown -->
+      <div class="g21" style="margin-top:4px;">
+        <div>
+          <div class="sh"><div class="sh-title">By District — Distress %</div></div>
+          <div class="card fi fi4" id="districtBars"></div>
+        </div>
+        <div>
+          <div class="sh"><div class="sh-title">Unresponsive Sites</div></div>
+          <div class="card fi fi4">
+            <div class="alert-card" style="background:none;border:none;padding:0;margin-bottom:12px;">
+              <div class="alert-icon warn" style="flex-shrink:0;">⚠</div>
+              <div class="alert-body">
+                <div class="alert-t" style="font-size:12px;">3 institutions — no scan submission in 14+ days</div>
+                <div class="alert-s">Central District · Site visits recommended</div>
+              </div>
+            </div>
+            <div style="font-size:11px;color:var(--text-dim);font-family:'DM Mono',monospace;line-height:2;">
+              Institution #12 · Last seen: 18 days ago<br>
+              Institution #24 · Last seen: 21 days ago<br>
+              Institution #38 · Last seen: 29 days ago
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== EXECUTIVE / NATIONAL VIEW ========== -->
+    <div class="panel" id="panel-executive">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;">
+        <div>
+          <h2 style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:600;">National Intelligence</h2>
+          <p style="font-size:11px;color:var(--text-dim);font-family:'DM Mono',monospace;margin-top:3px;">Executive Dashboard · Read-only · March 2025</p>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-ghost" style="font-size:11px;">Export Report</button>
+          <button class="btn btn-primary" style="font-size:11px;">Share Dashboard</button>
+        </div>
+      </div>
+
+      <div class="insight fi fi1">
+        <div class="bead-border"></div>
+        <div class="insight-head">
+          <span class="ai-badge">AI INSIGHT</span>
+          <span class="insight-title">National Overview — Q1 2025</span>
+        </div>
+        <div class="insight-text">"The national wellbeing index has risen 13 points since the programme's September 2024 launch — a measurable shift driven primarily by champion-led early interventions. Of 631 interventions completed this quarter, 71% show documented pattern improvement within 3 weeks. Three institutions with no recent data submissions represent a blind spot worth addressing before the next funder review. The ROI case is building: each early intervention costs a fraction of a reactive mental health referral, and the data is now rich enough to make that argument with evidence."</div>
+      </div>
+
+      <div class="g4 fi fi2">
+        <div class="metric teal"><div class="metric-lbl">Institutions Active</div><div class="metric-val count-up" data-target="47">0</div><div class="metric-sub">3 sectors · 6 districts</div></div>
+        <div class="metric green"><div class="metric-lbl">Individuals Tracked</div><div class="metric-val count-up" data-target="2841">0</div><div class="metric-sub">↑ 22% from last quarter</div></div>
+        <div class="metric green"><div class="metric-lbl">Interventions</div><div class="metric-val count-up" data-target="631">0</div><div class="metric-sub">71% recovery rate</div></div>
+        <div class="metric burg"><div class="metric-lbl">Flagged — Active</div><div class="metric-val count-up" data-target="84" style="color:var(--burgundy);">0</div><div class="metric-sub">Champion contact in progress</div></div>
+      </div>
+
+      <div class="g21" style="margin-top:14px;">
+        <div class="card fi fi3">
+          <div class="card-label">National Wellbeing Index — 6 Months</div>
+          <svg class="trend-svg" viewBox="0 0 400 110" preserveAspectRatio="none" id="natTrend"></svg>
+          <div style="display:flex;justify-content:space-between;margin-top:5px;">
+            <span style="font-size:9px;color:var(--text-dim);font-family:'DM Mono',monospace;">Oct</span>
+            <span style="font-size:9px;color:var(--text-dim);font-family:'DM Mono',monospace;">Nov</span>
+            <span style="font-size:9px;color:var(--text-dim);font-family:'DM Mono',monospace;">Dec</span>
+            <span style="font-size:9px;color:var(--text-dim);font-family:'DM Mono',monospace;">Jan</span>
+            <span style="font-size:9px;color:var(--text-dim);font-family:'DM Mono',monospace;">Feb</span>
+            <span style="font-size:9px;color:var(--text-dim);font-family:'DM Mono',monospace;">Mar</span>
+          </div>
+        </div>
+        <div class="card fi fi4">
+          <div class="card-label">Impact Metrics</div>
+          <div style="margin-top:12px;" id="impactBars"></div>
+          <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);">
+            <div style="font-family:'Cormorant Garamond',serif;font-size:13px;font-style:italic;color:var(--text-mid);line-height:1.6;">
+              "Presence drives data.<br>Data reveals patterns.<br>Patterns enable early intervention.<br>Early intervention prevents crisis."
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sector breakdown -->
+      <div class="sh"><div class="sh-title">By Sector — Programme Reach</div></div>
+      <div class="g3 fi fi3" id="sectorCards"></div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+/* ============================================================
+   DATA
+   ============================================================ */
+const MOODS = {
+  happy:    { l:'Happy',     c:'#f7d94c' },
+  positive: { l:'Positive',  c:'#5ecb6b' },
+  neutral:  { l:'Neutral',   c:'#7ec8e3' },
+  sick:     { l:'Sick',      c:'#9b7f5c' },
+  angry:    { l:'Angry',     c:'#c94040' },
+  stressed: { l:'Stressed',  c:'#e8852a' },
+  sad:      { l:'Sad',       c:'#d975a8' },
+  depressed:{ l:'Depressed', c:'#6a6a90' },
+};
+
+// Individual #031 — declining pattern
+const data031 = [
+  'happy','positive','neutral','happy','neutral',
+  'stressed','neutral','stressed','sad','stressed',
+  'angry','stressed','angry','angry','stressed',
+  'depressed','angry','stressed',null,null,
+  'angry','stressed','depressed',null,'stressed',
+  'angry','depressed','stressed','angry','stressed','depressed'
+];
+
+const cohort = [
+  { id:'#031', grp:'S3 · Male',    data:data031,               status:'flag' },
+  { id:'#047', grp:'S4 · Female',  data:[...Array(31)].map((_,i)=>['happy','positive','positive','happy','neutral'][i%5]), status:'stable' },
+  { id:'#058', grp:'S4 · Female',  data:[...Array(31)].map((_,i)=>i>17?null:['neutral','stressed','sad','neutral','stressed','happy'][i%6]), status:'fluct' },
+  { id:'#072', grp:'S3 · Male',    data:[...Array(31)].map((_,i)=>['neutral','positive','happy','neutral','sad','neutral'][i%6]), status:'fluct' },
+  { id:'#084', grp:'S5 · Female',  data:[...Array(31)].map((_,i)=>['happy','positive','happy','positive','neutral'][i%5]), status:'stable' },
+  { id:'#093', grp:'S2 · Male',    data:[...Array(31)].map((_,i)=>['neutral','sad','neutral','stressed','neutral'][i%5]), status:'fluct' },
+];
+
+/* ============================================================
+   AUTH / TIER SYSTEM
+   ============================================================ */
+const TIERS = {
+  champion:    { label:'Community Champion', sector:'School · Cohort A', dot:'C', tabs:[{id:'upload',l:'Upload & Scan'},{id:'individual',l:'Individual View',badge:3}] },
+  institution: { label:'Head Teacher',       sector:'Utalii Secondary',   dot:'I', tabs:[{id:'institution',l:'Institution View'}] },
+  district:    { label:'District Officer',   sector:'Central District',   dot:'D', tabs:[{id:'institution',l:'Institution View'},{id:'district',l:'District View'}] },
+  executive:   { label:'Executive',          sector:'National · DCI',     dot:'E', tabs:[{id:'institution',l:'Institution Overview'},{id:'district',l:'District View'},{id:'executive',l:'National Intelligence'}] },
+};
+
+let currentTier = null;
+
+function doLogin() {
+  const e = document.getElementById('loginEmail').value;
+  const p = document.getElementById('loginPass').value;
+  if (!e || !p) { alert('Please enter email and password.'); return; }
+  loginAs('champion'); // default for demo
+}
+
+function loginAs(tier) {
+  currentTier = tier;
+  const t = TIERS[tier];
+  document.getElementById('loginScreen').classList.add('exit');
+  setTimeout(() => {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('appShell').classList.add('show');
+    document.getElementById('headerSector').textContent = t.sector;
+    document.getElementById('userName').textContent = t.label;
+    document.getElementById('userDot').textContent = t.dot;
+    buildTabs(t.tabs);
+    // Activate first tab
+    activateTab(t.tabs[0].id);
+    runCountUps();
+  }, 500);
+}
+
+function logout() {
+  document.getElementById('appShell').classList.remove('show');
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('loginScreen').classList.remove('exit');
+  document.getElementById('loginEmail').value = '';
+  document.getElementById('loginPass').value = '';
+}
+
+function buildTabs(tabs) {
+  const bar = document.getElementById('tabBar');
+  bar.innerHTML = '';
+  tabs.forEach(t => {
+    const badge = t.badge ? `<span class="tab-badge">${t.badge}</span>` : '';
+    bar.innerHTML += `<button class="tab" onclick="activateTab('${t.id}')" id="tab-${t.id}">${t.l}${badge}</button>`;
+  });
+}
+
+function activateTab(id) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  const tabEl = document.getElementById('tab-'+id);
+  if (tabEl) tabEl.classList.add('active');
+  const panelEl = document.getElementById('panel-'+id);
+  if (panelEl) panelEl.classList.add('active');
+}
+
+/* ============================================================
+   SECTOR SWITCHING
+   ============================================================ */
+const SECTOR_DATA = {
+  student: {
+    title: 'Student Cohort Overview',
+    sub: 'Head Teacher · March 2025',
+    insightTitle: 'Student Cohort — Week 3, March',
+    insightText: '"The student cohort\'s emotional climate has improved slightly since February, but a mid-week stress spike — concentrated on Tuesdays and Wednesdays — persists across multiple year groups. This pattern correlates with assessment scheduling. The 7% critical cohort requires champion contact this week. Staff wellbeing mirrors the student pattern, suggesting shared institutional pressure rather than individual circumstance."',
+    metrics: [
+      { lbl:'Students Tracked', val:342, sub:'↑ 18 this term', cls:'teal' },
+      { lbl:'Well · Positive',  val:'47%', sub:'↑ 4% from last month', cls:'green' },
+      { lbl:'At Risk',          val:'15%', sub:'↑ 3% — monitor closely', cls:'amber' },
+      { lbl:'Flagged Critical', val:24, sub:'Champion contact needed', cls:'burg' },
+    ],
+    trendPts: [62,58,55,60,64,61,58,56,61,65,63,67],
+    trendLbl: '12-Week Wellbeing Trend — Students',
+    donutData: [{l:'Well',p:47,c:'#5ecb6b'},{l:'Neutral',p:31,c:'#7ec8e3'},{l:'At Risk',p:15,c:'#e8852a'},{l:'Critical',p:7,c:'#c94040'}],
+    donutNum: '78%', donutLbl: 'Well or\nNeutral',
+    champLabel: 'Champion Session Activity',
+    champContent: `
+      <div class="dist-row"><div class="dist-label">Sessions held</div><div class="dist-track"><div class="dist-fill" style="width:72%;background:var(--teal-bright);"></div></div><div class="dist-val">36</div></div>
+      <div class="dist-row"><div class="dist-label">Flagged & escalated</div><div class="dist-track"><div class="dist-fill" style="width:40%;background:var(--burgundy);"></div></div><div class="dist-val">8</div></div>
+      <div class="dist-row"><div class="dist-label">Resolved this month</div><div class="dist-track"><div class="dist-fill" style="width:60%;background:var(--m-positive);"></div></div><div class="dist-val">14</div></div>
+      <div style="margin-top:14px;" class="alert info" style="background:none;">
+        <div class="alert-icon info">🔵</div>
+        <div class="alert-body"><div class="alert-t" style="font-size:12px;">Teacher cohort: 62% logged stress on Monday this week</div><div class="alert-s">Recommend: end-of-term check-in for staff before break</div></div>
+      </div>`,
+    trendsTitle: 'Key Patterns — Student Cohort',
+    trends: [
+      { icon:'📅', t:'Mid-week dip persists', d:'Tuesdays consistently show highest stress and sad entries across year groups — correlates with assessment days.' },
+      { icon:'📈', t:'Exam pressure visible', d:'Stressed and angry entries up 18% in the two weeks before assessment weeks across all year groups.' },
+      { icon:'🟢', t:'Intervention working', d:'5 of 7 students flagged in February show measurably improved patterns after champion sessions.' },
+    ],
+  },
+  corporate: {
+    title: 'Employee Wellbeing Overview',
+    sub: 'HR Director · March 2025',
+    insightTitle: 'Employee Cohort — Week 3, March',
+    insightText: '"The Monday dip is now a consistent pattern — 68% of employees log stressed or neutral on Mondays, recovering by mid-week. This is a burnout precursor, not a crisis, but it warrants a structural response. The marketing department carries disproportionate load this month — 4 employees in that team have been in the amber zone for 3+ weeks. Q1 deadline pressure is the likely driver. EAP referrals are down, which may indicate stigma around usage rather than reduced need."',
+    metrics: [
+      { lbl:'Employees Tracked', val:186, sub:'4 departments', cls:'teal' },
+      { lbl:'Thriving',          val:'41%', sub:'↑ 2% from last month', cls:'green' },
+      { lbl:'Burnout Risk',      val:'22%', sub:'↑ 5% — review workload', cls:'amber' },
+      { lbl:'EAP Referrals',     val:7, sub:'Discretionary · This month', cls:'burg' },
+    ],
+    trendPts: [58,55,52,56,60,57,54,51,55,59,57,61],
+    trendLbl: '12-Week Wellbeing Trend — Employees',
+    donutData: [{l:'Thriving',p:41,c:'#5ecb6b'},{l:'Neutral',p:37,c:'#7ec8e3'},{l:'Burnout Risk',p:22,c:'#e8852a'}],
+    donutNum: '78%', donutLbl: 'Stable or\nThriving',
+    champLabel: 'People Partner Activity',
+    champContent: `
+      <div class="dist-row"><div class="dist-label">Check-ins held</div><div class="dist-track"><div class="dist-fill" style="width:55%;background:var(--teal-bright);"></div></div><div class="dist-val">22</div></div>
+      <div class="dist-row"><div class="dist-label">EAP Referrals</div><div class="dist-track"><div class="dist-fill" style="width:18%;background:var(--burgundy);"></div></div><div class="dist-val">7</div></div>
+      <div class="dist-row"><div class="dist-label">Recovery tracked</div><div class="dist-track"><div class="dist-fill" style="width:65%;background:var(--m-positive);"></div></div><div class="dist-val">11</div></div>`,
+    trendsTitle: 'Key Patterns — Employee Cohort',
+    trends: [
+      { icon:'📉', t:'Monday dip is consistent', d:'68% of employees log stressed or neutral on Mondays — a structural burnout signal worth addressing in scheduling.' },
+      { icon:'🔶', t:'Marketing team in amber zone', d:'4 employees have sustained amber (stressed) patterns for 3+ weeks. Q1 deadline pressure is the likely driver.' },
+      { icon:'🔵', t:'EAP usage low', d:'Referrals are below expected rates. May indicate awareness or stigma gap — recommend a quiet internal communications push.' },
+    ],
+  },
+  ngo: {
+    title: 'Programme Cohort Overview',
+    sub: 'Programme Manager · March 2025',
+    insightTitle: 'Client Cohort — Recovery Programme, Week 3',
+    insightText: '"Cohort B is showing the strongest recovery trajectory in the programme\'s history — 14 of 22 participants have moved from red to amber or better over 6 weeks of consistent champion engagement. Cohort A has one individual showing a relapse-risk pattern: three weeks of improvement followed by a sharp return to depressed entries this week. This is a known inflection point in recovery — a gentle but urgent check-in is warranted. Funders should note: the pattern data is now sufficient to support a peer-reviewed impact study."',
+    metrics: [
+      { lbl:'Clients Tracked', val:67, sub:'3 active cohorts', cls:'teal' },
+      { lbl:'Improving',       val:'63%', sub:'Up from 44% last month', cls:'green' },
+      { lbl:'Relapse Risk',    val:'12%', sub:'Monitor closely', cls:'amber' },
+      { lbl:'Completed Programme', val:18, sub:'This quarter', cls:'burg' },
+    ],
+    trendPts: [44,48,51,55,58,54,57,60,63,66,63,67],
+    trendLbl: '12-Week Recovery Trend — Programme Cohort',
+    donutData: [{l:'Improving',p:63,c:'#5ecb6b'},{l:'Stable',p:25,c:'#7ec8e3'},{l:'Relapse Risk',p:12,c:'#e8852a'}],
+    donutNum: '88%', donutLbl: 'Stable or\nImproving',
+    champLabel: 'Counsellor / Champion Sessions',
+    champContent: `
+      <div class="dist-row"><div class="dist-label">Sessions held</div><div class="dist-track"><div class="dist-fill" style="width:88%;background:var(--teal-bright);"></div></div><div class="dist-val">44</div></div>
+      <div class="dist-row"><div class="dist-label">Escalated to clinical</div><div class="dist-track"><div class="dist-fill" style="width:16%;background:var(--burgundy);"></div></div><div class="dist-val">4</div></div>
+      <div class="dist-row"><div class="dist-label">Programme completions</div><div class="dist-track"><div class="dist-fill" style="width:36%;background:var(--m-positive);"></div></div><div class="dist-val">18</div></div>`,
+    trendsTitle: 'Key Patterns — Recovery Programme',
+    trends: [
+      { icon:'🟢', t:'Cohort B: strongest recovery run', d:'14 of 22 participants have moved from critical to improving over 6 weeks of consistent champion engagement.' },
+      { icon:'⚠️', t:'Relapse-risk inflection point', d:'One individual in Cohort A shows a classic relapse pattern — improvement followed by sharp return to depressed entries.' },
+      { icon:'📊', t:'Impact study opportunity', d:'Data richness now meets the threshold for a peer-reviewed study. Recommend flagging to academic partner this month.' },
+    ],
+  },
+};
+
+let currentSector = 'student';
+
+function setSector(el, sector) {
+  el.closest('.stabs').querySelectorAll('.stab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  currentSector = sector;
+  renderInstitution(sector);
+}
+
+function renderInstitution(sector) {
+  const d = SECTOR_DATA[sector];
+  document.getElementById('instTitle').textContent = d.title;
+  document.getElementById('instSub').textContent = d.sub;
+  document.getElementById('instInsightTitle').textContent = d.insightTitle;
+  document.getElementById('instInsightText').textContent = d.insightText;
+  document.getElementById('trendLabel').textContent = d.trendLbl;
+  document.getElementById('champTitle').textContent = d.champLabel;
+  document.getElementById('trendsTitle').textContent = d.trendsTitle;
+
+  // Metrics
+  const mEl = document.getElementById('instMetrics');
+  mEl.innerHTML = d.metrics.map(m =>
+    `<div class="metric ${m.cls}"><div class="metric-lbl">${m.lbl}</div><div class="metric-val">${m.val}</div><div class="metric-sub">${m.sub}</div></div>`
+  ).join('');
+
+  // Trend
+  buildTrendSvg('instTrend', d.trendPts, '#2a9d8f', '#48cae4');
+
+  // Donut
+  buildDonut('donutSvg', 'donutLegend', d.donutData);
+  document.getElementById('donutNum').textContent = d.donutNum;
+  document.getElementById('donutLbl').textContent = d.donutLbl;
+
+  // Champ
+  document.getElementById('champActivity').innerHTML = d.champContent;
+
+  // Trends
+  const tEl = document.getElementById('instTrends');
+  tEl.innerHTML = d.trends.map(t =>
+    `<div class="card"><div style="font-size:26px;margin-bottom:8px;">${t.icon}</div><div style="font-size:13px;font-weight:600;margin-bottom:4px;">${t.t}</div><div style="font-size:12px;color:var(--text-dim);line-height:1.55;">${t.d}</div></div>`
+  ).join('');
+}
+
+/* ============================================================
+   CHART BUILDERS
+   ============================================================ */
+function buildTrendSvg(id, pts, c1, c2) {
+  const svg = document.getElementById(id);
+  if (!svg) return;
+  const W=400, H=110, pad=10;
+  const min=Math.min(...pts)-5, max=Math.max(...pts)+5;
+  const coords = pts.map((v,i) => [
+    pad + i*(W-pad*2)/(pts.length-1),
+    H - pad - (v-min)/(max-min)*(H-pad*2)
+  ]);
+  const pathD = `M${coords[0][0]},${coords[0][1]} ` + coords.slice(1).map(c=>`L${c[0]},${c[1]}`).join(' ');
+  const areaD = pathD + ` L${coords[coords.length-1][0]},${H} L${coords[0][0]},${H} Z`;
+  const gid = 'tg'+id;
+  svg.innerHTML = `
+    <defs>
+      <linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="${c1}" stop-opacity="0.35"/>
+        <stop offset="100%" stop-color="${c1}" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    <path d="${areaD}" fill="url(#${gid})"/>
+    <path d="${pathD}" fill="none" stroke="${c1}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    ${coords.map(([x,y],i) => i===coords.length-1?`<circle cx="${x}" cy="${y}" r="4" fill="${c1}" stroke="var(--bg2)" stroke-width="2"/>`:
+      `<circle cx="${x}" cy="${y}" r="2.5" fill="${c1}" opacity="0.5"/>`).join('')}
+  `;
+}
+
+function buildDonut(svgId, legId, data) {
+  const svg = document.getElementById(svgId);
+  const leg = document.getElementById(legId);
+  if (!svg) return;
+  const cx=65, cy=65, r=46, stroke=16;
+  const circ = 2*Math.PI*r;
+  let offset = 0;
+  let paths = '';
+  data.forEach(d => {
+    const dash = (d.p/100)*circ;
+    paths += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${d.c}" stroke-width="${stroke}" stroke-dasharray="${dash} ${circ-dash}" stroke-dashoffset="${-offset}" opacity="0.9"/>`;
+    offset += dash;
+  });
+  svg.innerHTML = paths;
+  if (leg) leg.innerHTML = data.map(d =>
+    `<div style="display:flex;align-items:center;gap:7px;margin-bottom:7px;"><div style="width:9px;height:9px;border-radius:2px;background:${d.c};flex-shrink:0;"></div><span style="font-size:11px;color:var(--text-mid);font-family:'DM Mono',monospace;">${d.l} <span style="color:${d.c};font-weight:600;">${d.p}%</span></span></div>`
+  ).join('');
+}
+
+/* ============================================================
+   INDIVIDUAL / CHAMPION VIEW
+   ============================================================ */
+function buildCal(calId, data) {
+  const el = document.getElementById(calId);
+  if (!el) return;
+  el.innerHTML = '';
+  ['M','T','W','T','F','S','S'].forEach(d => {
+    el.innerHTML += `<div style="font-size:9px;color:var(--text-dim);font-family:'DM Mono',monospace;text-align:center;padding-bottom:4px;">${d}</div>`;
+  });
+  // offset (Tuesday start)
+  el.innerHTML += `<div class="cal-empty"></div>`;
+  data.forEach((mood,i) => {
+    if (mood === null) {
+      el.innerHTML += `<div class="cal-d cal-null" title="Day ${i+1}: Not logged"></div>`;
+    } else {
+      el.innerHTML += `<div class="cal-d" style="background:${MOODS[mood].c};" title="Day ${i+1}: ${MOODS[mood].l}"></div>`;
+    }
+  });
+}
+
+function buildLegend(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.innerHTML = Object.entries(MOODS).map(([k,v]) =>
+    `<div class="mood-chip"><div class="mood-dot" style="background:${v.c};"></div>${v.l}</div>`
+  ).join('');
+}
+
+function buildDist(id, data) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const counts = {};
+  data.filter(Boolean).forEach(d => counts[d] = (counts[d]||0)+1);
+  const total = Object.values(counts).reduce((a,b)=>a+b,0);
+  el.innerHTML = Object.entries(counts).sort((a,b)=>b[1]-a[1]).map(([m,c]) =>
+    `<div class="dist-row"><div class="dist-label"><div style="width:8px;height:8px;border-radius:2px;background:${MOODS[m].c};flex-shrink:0;"></div>${MOODS[m].l}</div><div class="dist-track"><div class="dist-fill" style="width:${(c/total*100).toFixed(0)}%;background:${MOODS[m].c};"></div></div><div class="dist-val">${c}d</div></div>`
+  ).join('');
+}
+
+function buildIndTable() {
+  const el = document.getElementById('indTable');
+  if (!el) return;
+  el.innerHTML = cohort.map(s => {
+    const valid = s.data.filter(Boolean);
+    const dominant = valid.reduce((a,d)=>{a[d]=(a[d]||0)+1;return a;},{});
+    const sorted = Object.entries(dominant).sort((a,b)=>b[1]-a[1]);
+    const barSegs = sorted.map(([m,c])=>`<div style="flex:${c};background:${MOODS[m].c};height:100%;"></div>`).join('');
+    const pillMap = { stable:'pill-stable', flag:'pill-flag', fluct:'pill-fluct', decline:'pill-decline' };
+    const pillTxt = { stable:'Stable', flag:'⚑ Flagged', fluct:'Fluctuating', decline:'Declining' };
+    const avBg = s.status==='flag' ? 'var(--burgundy-dim)' : s.status==='stable' ? 'rgba(94,203,107,0.1)' : 'rgba(232,133,42,0.1)';
+    const avC  = s.status==='flag' ? '#e06080' : s.status==='stable' ? 'var(--m-positive)' : 'var(--m-stressed)';
+    return `<div class="r-row">
+      <div class="r-av" style="background:${avBg};color:${avC};">${s.id}</div>
+      <div style="flex:1;min-width:0;"><div style="font-size:12px;font-weight:600;">Individual ${s.id}</div><div style="font-size:10px;color:var(--text-dim);font-family:'DM Mono',monospace;margin-top:2px;">${s.grp} · ${valid.length} days</div></div>
+      <div style="width:100px;height:7px;border-radius:4px;overflow:hidden;display:flex;background:var(--bg3);flex-shrink:0;">${barSegs}</div>
+      <span class="pill ${pillMap[s.status]}">${pillTxt[s.status]}</span>
+    </div>`;
+  }).join('');
+}
+
+/* ============================================================
+   HEATMAP
+   ============================================================ */
+function buildHeatmap() {
+  const el = document.getElementById('heatmap');
+  if (!el) return;
+  const levels = [
+    {c:'#5ecb6b',o:0.6},{c:'#f7d94c',o:0.65},{c:'#e8852a',o:0.6},{c:'#c94040',o:0.65},{c:'#6a6a90',o:0.7}
+  ];
+  const weights = [0.28,0.3,0.22,0.14,0.06];
+  const insts = ['Kampala Central','Gulu City','Mbale HS','Arua Academy','Masaka Sec','Fort Portal SS','Jinja College','Soroti Girls','Lira SS','Kabale PS','Mbarara HS','Tororo SS','Entebbe Academy','Mukono HS','Wakiso SS','Lugazi College','Iganga PS','Bushenyi SS','Hoima HS','Kasese SS','Ntungamo Academy','Kyotera PS','Rakai SS','Masindi HS','Kibaale SS','Kiboga PS','Nakaseke HS','Luwero Academy','Nakasongola SS','Kayunga HS','Buyende PS','Kamuli SS','Kaliro Academy','Namutumba PS','Bugweri HS','Bugiri SS','Mayuge Academy','Jinja Rural','Bugabula SS','Bukooli HS','Buvuma IS','Kalangala SS','Lwengo HS','Masaka Rural','Kalungu SS','Bukomansimbi PS','Gomba HS'];
+  el.innerHTML = '';
+  insts.forEach(name => {
+    const roll = Math.random();
+    let cum=0, chosen=levels[0];
+    for(let j=0;j<weights.length;j++){cum+=weights[j];if(roll<cum){chosen=levels[j];break;}}
+    el.innerHTML += `<div class="hm-cell" style="background:${chosen.c};opacity:${chosen.o};" data-tip="${name}"></div>`;
+  });
+  for(let i=0;i<3;i++) el.innerHTML += `<div class="hm-cell" style="background:#3a3a55;border:1px dashed rgba(255,255,255,0.1);" data-tip="No data — 2+ weeks"></div>`;
+}
+
+function buildDistrictBars() {
+  const el = document.getElementById('districtBars');
+  if (!el) return;
+  const data = [
+    {n:'Eastern',  p:41, c:'#c94040'},
+    {n:'Northern', p:38, c:'#c94040'},
+    {n:'Central',  p:22, c:'#e8852a'},
+    {n:'Kampala',  p:29, c:'#e8852a'},
+    {n:'Western',  p:18, c:'#f7d94c'},
+    {n:'Southern', p:14, c:'#5ecb6b'},
+  ];
+  el.innerHTML = data.map(d =>
+    `<div class="dist-row"><div class="dist-label">${d.n}</div><div class="dist-track"><div class="dist-fill" style="width:${d.p}%;background:${d.c};"></div></div><div class="dist-val" style="color:${d.c};">${d.p}%</div></div>`
+  ).join('');
+}
+
+function buildImpactBars() {
+  const el = document.getElementById('impactBars');
+  if (!el) return;
+  const data = [
+    {n:'Interventions', p:78, v:'631', c:'var(--teal-bright)'},
+    {n:'Recovery rate',  p:71, v:'71%', c:'var(--m-positive)'},
+    {n:'Data coverage',  p:85, v:'85%', c:'var(--m-neutral)'},
+    {n:'Critical flags', p:12, v:'84',  c:'var(--burgundy)'},
+  ];
+  el.innerHTML = data.map(d =>
+    `<div class="dist-row"><div class="dist-label">${d.n}</div><div class="dist-track"><div class="dist-fill" style="width:${d.p}%;background:${d.c};"></div></div><div class="dist-val" style="color:${d.c};">${d.v}</div></div>`
+  ).join('');
+}
+
+function buildSectorCards() {
+  const el = document.getElementById('sectorCards');
+  if (!el) return;
+  const data = [
+    { icon:'🏫', sector:'Education', insts:28, indivs:1842, flags:52, trend:'↑ 11%', c:'var(--teal-bright)' },
+    { icon:'🏢', sector:'Corporate', insts:12, indivs:648,  flags:21, trend:'↑ 7%',  c:'var(--turquoise)' },
+    { icon:'🌍', sector:'NGO · Rehab', insts:7, indivs:351, flags:11, trend:'↑ 19%', c:'var(--m-positive)' },
+  ];
+  el.innerHTML = data.map(d => `
+    <div class="card">
+      <div style="font-size:28px;margin-bottom:10px;">${d.icon}</div>
+      <div style="font-size:16px;font-weight:700;margin-bottom:6px;color:${d.c};">${d.sector}</div>
+      <div class="dist-row" style="margin-bottom:6px;"><div class="dist-label" style="width:auto;flex:1;font-size:11px;">Institutions</div><div style="font-size:13px;font-weight:700;">${d.insts}</div></div>
+      <div class="dist-row" style="margin-bottom:6px;"><div class="dist-label" style="width:auto;flex:1;font-size:11px;">Individuals</div><div style="font-size:13px;font-weight:700;">${d.indivs}</div></div>
+      <div class="dist-row" style="margin-bottom:6px;"><div class="dist-label" style="width:auto;flex:1;font-size:11px;">Active flags</div><div style="font-size:13px;font-weight:700;color:var(--burgundy);">${d.flags}</div></div>
+      <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border);">
+        <span style="font-size:11px;font-family:'DM Mono',monospace;color:var(--m-positive);">${d.trend} wellbeing this quarter</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+/* ============================================================
+   UPLOAD FLOW
+   ============================================================ */
+function ev(e) { e.preventDefault(); document.getElementById('uploadZone') && document.getElementById('uploadZone').classList.add('drag-over'); }
+function drop(e) { e.preventDefault(); const f=e.dataTransfer.files[0]; if(f) showPrev(f.name); }
+function fileChosen(e) { const f=e.target.files[0]; if(f) showPrev(f.name); }
+function simScan() { showPrev('scan_march_2025_cohortA.jpg'); }
+
+function showPrev(name) {
+  document.getElementById('prevName').textContent = name;
+  document.getElementById('upPreview').classList.add('show');
+}
+
+function runProc() {
+  const ov = document.getElementById('procOverlay');
+  ov.classList.add('show');
+  const steps = ['ps1','ps2','ps3','ps4','ps5','ps6'];
+  let i = 0;
+  const iv = setInterval(() => {
+    if (i>0) document.getElementById(steps[i-1]).classList.remove('active');
+    if (i < steps.length) {
+      document.getElementById(steps[i]).classList.add('active');
+      if (i>0) document.getElementById(steps[i-1]).classList.add('done');
+      i++;
+    } else {
+      clearInterval(iv);
+      setTimeout(() => {
+        ov.classList.remove('show');
+        activateTab('individual');
+        const tabEl = document.getElementById('tab-individual');
+        if (tabEl) tabEl.classList.add('active');
+      }, 700);
+    }
+  }, 520);
+}
+
+/* ============================================================
+   THEME TOGGLE
+   ============================================================ */
+function toggleTheme() {
+  const html = document.documentElement;
+  html.setAttribute('data-theme', html.getAttribute('data-theme')==='dark' ? 'light' : 'dark');
+}
+
+/* ============================================================
+   COUNT-UP ANIMATION
+   ============================================================ */
+function countUp(el, target, duration=1200) {
+  const isStr = typeof target === 'string';
+  const num = isStr ? parseInt(target) : target;
+  const start = Date.now();
+  const tick = () => {
+    const prog = Math.min((Date.now()-start)/duration, 1);
+    const ease = 1-Math.pow(1-prog, 3);
+    const val = Math.floor(ease * num);
+    el.textContent = isStr ? val + target.replace(/[0-9]/g,'') : val.toLocaleString();
+    if (prog < 1) requestAnimationFrame(tick);
+    else el.textContent = isStr ? target : num.toLocaleString();
+  };
+  requestAnimationFrame(tick);
+}
+
+function runCountUps() {
+  setTimeout(() => {
+    document.querySelectorAll('.count-up').forEach(el => {
+      const t = el.getAttribute('data-target');
+      countUp(el, isNaN(t) ? t : parseInt(t));
+    });
+  }, 300);
+}
+
+/* ============================================================
+   INIT — build all static components
+   ============================================================ */
+buildCal('cal031', data031);
+buildLegend('moodLeg031');
+buildDist('dist031', data031);
+buildIndTable();
+buildHeatmap();
+buildDistrictBars();
+buildImpactBars();
+buildSectorCards();
+buildTrendSvg('natTrend', [48,52,49,55,58,61], '#2a9d8f', '#48cae4');
+
+// Institution view defaults (student sector)
+setTimeout(() => {
+  renderInstitution('student');
+}, 100);
+</script>
+</body>
+</html>
